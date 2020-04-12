@@ -10,12 +10,12 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.securityapp.securityapp.jwt.JwtAuthenticationEntryPoint;
 import com.securityapp.securityapp.jwt.JwtRequestFilter;
+import com.securityapp.securityapp.jwt.user.MyUserDetailsService;
 
 /*
  * knote: tells Spring that this is Security configuration
@@ -28,18 +28,27 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	
-	@Autowired
+	@Autowired //knote: works for Jwt example code with hardcoded user
 	private UserDetailsService jwtUserDetailsService;
+	
+	@Autowired
+	private MyUserDetailsService myUserDetailsService;
+	
 	
 	@Autowired
 	private JwtRequestFilter jwtRequestFilter;
 	
+	/*
+	 * knote: since we have password encoder, user will pass unencryoted normal password.
+	 * 		-but we should have mechanism to store encrypted password in DB when we create user, like we are doing in SecurityappApplication.run method
+	 */
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
 		// configure AuthenticationManager so that it knows from where to load
 		// user for matching credentials
 		// Use BCryptPasswordEncoder
-		auth.userDetailsService(jwtUserDetailsService).passwordEncoder(getPasswordEncoder());
+		//auth.userDetailsService(jwtUserDetailsService).passwordEncoder(getPasswordEncoder());
+		auth.userDetailsService(myUserDetailsService).passwordEncoder(getPasswordEncoder());
 	}
 	
 	/*
@@ -57,15 +66,29 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	 */
 	@Override
 	protected void configure(HttpSecurity httpSecurity) throws Exception {
+		/*
+		//h2 console
+		httpSecurity.authorizeRequests()
+        .antMatchers("/h2-console/**").hasRole("ADMIN")//allow h2 console access to admins only
+        .anyRequest().authenticated()//all other urls can be access by any authenticated role
+        .and().formLogin()//enable form login instead of basic login
+        .and().csrf().ignoringAntMatchers("/h2-console/**")//don't apply CSRF protection to /h2-console
+        .and().headers().frameOptions().sameOrigin();//allow use of frame to same origin urls
+		*/
+		
 		// We don't need CSRF for this example
 		httpSecurity.csrf().disable()
 		// dont authenticate this particular request
-		.authorizeRequests().antMatchers("/authenticate").permitAll().
+		//.authorizeRequests().antMatchers("/h2c/**").permitAll().	//knote: specify multiple urls with "antMatchers"
+		.authorizeRequests().antMatchers("/authenticate", "/h2c/**").permitAll().	//knote: specify multiple urls with "antMatchers"
 		// all other requests need to be authenticated
-		anyRequest().authenticated().and().
+		anyRequest().authenticated()
+		//h2 console related
+		//.and().csrf().ignoringAntMatchers("/h2-console/**")//don't apply CSRF protection to /h2-console
+        .and().headers().frameOptions().sameOrigin()//allow use of frame to same origin urls		
 		// make sure we use stateless session; session won't be used to
 		// store user's state.
-		exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		.and().exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 		// Add a filter to validate the tokens with every request
 		httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 	}
