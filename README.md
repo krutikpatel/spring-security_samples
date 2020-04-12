@@ -4,6 +4,9 @@ spring-security related samples
 # Important Links
 
 * https://spring.io/guides/topicals/spring-security-architecture/ - Spring Security Internals
+  * https://github.com/spring-guides/top-spring-security-architecture
+  
+  
 * Spring Security Guides : https://www.baeldung.com/security-spring
 * Springboot Security + JWT : https://www.javainuse.com/spring/boot-jwt
 * Baeldung repos :
