@@ -8,7 +8,10 @@ spring-security related samples
   
   
 * Spring Security Guides : https://www.baeldung.com/security-spring
-* Springboot Security + JWT : https://www.javainuse.com/spring/boot-jwt
+* Springboot Security + JWT : 
+  * https://www.javainuse.com/spring/boot-jwt
+  * https://dzone.com/articles/spring-boot-security-json-web-tokenjwt-hello-world
+  
 * Baeldung repos :
   * https://github.com/eugenp/learn-spring-security
   * https://github.com/Baeldung/spring-security-registration
